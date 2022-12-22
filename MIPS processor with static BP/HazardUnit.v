@@ -32,8 +32,8 @@ input Jr, EX_RegWrite, MEM_RegWrite;
 //4 states in mealy FSM
 parameter NoHazard_state=2'b00;
 parameter Jump_state=2'b01;
-parameter Branch0_state=2'b10;
-parameter Branch1_state=2'b11;
+//parameter Branch0_state=2'b10;
+parameter Branch1_state=2'b10;
 reg LdHazard;
 wire JrHazard;
 reg [1:0] FSM_state, FSM_nxt_state;
@@ -88,6 +88,24 @@ NoHazard_state: begin
 				addrSel=2'b00;
 				FSM_nxt_state=NoHazard_state;
 				end
+			else if(Branch==1'b1) begin 
+       		   if(ALUZero==1'b1)
+	           begin
+		       IF_write=1'b0;
+	           PC_write=1'b1;
+		       bubble=1'b1;
+		       addrSel=2'b10;
+		       FSM_nxt_state=Branch1_state;
+		       end
+		       else
+		       begin
+		       IF_write=1'b1;
+		       PC_write=1'b1;
+		       bubble=1'b0;
+		       addrSel=2'b00;
+		       FSM_nxt_state=NoHazard_state;
+		       end
+		       end
 			else if (Jump==1'b1)
 		    	begin
 			    IF_write=1'b0;
@@ -96,14 +114,7 @@ NoHazard_state: begin
 			    addrSel=2'b01;
 			    FSM_nxt_state=Jump_state;
 			end
-			else if(Branch==1'b1)
-				begin
-				IF_write=1'b0;
-				PC_write=1'b0;
-				bubble=1'b0;
-				addrSel=2'b00;
-				FSM_nxt_state=Branch0_state;
-				end
+			
 			else
 				begin
 				IF_write=1'b1;
@@ -120,30 +131,11 @@ Jump_state: begin
 		addrSel=2'b00;
 		FSM_nxt_state=NoHazard_state;
 		end
-Branch0_state:
-begin
-		if(ALUZero==1'b0)
-		begin
-		IF_write=1'b1;
-		PC_write=1'b1;
-		bubble=1'b1;
-		addrSel=2'b00;
-		FSM_nxt_state=NoHazard_state;
-		end
-		else
-		begin
-		IF_write=1'b0;
-		PC_write=1'b1;
-		bubble=1'b1;
-		addrSel=2'b10;
-		FSM_nxt_state=Branch1_state;
-		end
-end
 Branch1_state:
 begin
 		IF_write=1'b1;
 		PC_write=1'b1;
-		bubble=1'b1;
+		bubble=1'b0;
 		addrSel=2'b00;
 		FSM_nxt_state=NoHazard_state;
 end
